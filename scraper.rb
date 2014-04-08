@@ -41,19 +41,21 @@ def click(page, doc)
   end
 end
 
-url = "http://pdonline.frasercoast.qld.gov.au/Modules/ApplicationMaster/default.aspx?page=found&1=thismonth&4a=BPS%27,%27MC%27,%27OP%27,%27SB%27,%27MCU%27,%27ROL%27,%27OPWKS%27,%27ACA&6=F"
-comment_url = "mailto:enquiry@frasercoast.qld.gov.au"
+url = "http://pdonline.logan.qld.gov.au/MasterViewUI/Modules/ApplicationMaster/default.aspx?page=found&1=thismonth&4a=&6=F"
+comment_url = "mailto:council@logan.qld.gov.au"
 
 agent = Mechanize.new
 
 # Read in a page
 page = agent.get(url)
 
-form = page.forms.first
+form = page.forms.last
 button = form.button_with(value: "Agree")
-form.submit(button)
-# It doesn't even redirect to the correct place. Ugh
-page = agent.get(url)
+raise "Can't find agree button" if button.nil?
+page = form.submit(button)
+
+puts page.body
+exit
 current_page_no = 1
 next_page_link = true
 
