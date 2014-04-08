@@ -12,11 +12,11 @@ def scrape_page(page, comment_url)
       "council_reference" => tds[1],
       "date_received" => Date.new(year, month, day).to_s,
       "description" => tds[3].gsub("&amp;", "&").split("<br>")[1].squeeze(" ").strip,
-      "address" => tds[3].gsub("&amp;", "&").split("<br>")[0].gsub("\r", " ").gsub("<strong>","").gsub("</strong>","").squeeze(" ").strip + ", QLD",
+      "address" => tds[3].gsub("&amp;", "&").split("<br>")[0].gsub("\r", " ").gsub("<strong>","").gsub("</strong>","").squeeze(" ").strip,
       "date_scraped" => Date.today.to_s,
       "comment_url" => comment_url
     }
-    #p record
+    p record
     if (ScraperWiki.select("* from data where `council_reference`='#{record['council_reference']}'").empty? rescue true)
       ScraperWiki.save_sqlite(['council_reference'], record)
     else
@@ -49,13 +49,13 @@ agent = Mechanize.new
 # Read in a page
 page = agent.get(url)
 
-form = page.forms.last
+# This is weird. There are two forms with the Agree / Disagree buttons. One of them
+# works the other one doesn't. Go figure.
+form = page.forms[1]
 button = form.button_with(value: "Agree")
 raise "Can't find agree button" if button.nil?
 page = form.submit(button)
 
-puts page.body
-exit
 current_page_no = 1
 next_page_link = true
 
