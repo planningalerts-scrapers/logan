@@ -2,6 +2,27 @@ require 'scraperwiki'
 require 'mechanize'
 
 # Scraping from Masterview 2.0
+case ENV['MORPH_PERIOD']
+  when 'lastmonth'
+  	period = "&1=lastmonth"
+  when 'thismonth'
+  	period = "&1=thismonth"
+  else
+    unless ENV['MORPH_PERIOD'] == nil
+      matches = ENV['MORPH_PERIOD'].scan(/^([0-9]{4})-(0[1-9]|1[0-2])$/)
+      unless matches.empty?
+        period = "&1=" + Date.new(matches[0][0].to_i, matches[0][1].to_i, 1).strftime("%d/%m/%Y")
+        period = period + "&2=" + Date.new(matches[0][0].to_i, matches[0][1].to_i, -1).strftime("%d/%m/%Y")
+      else
+        period = "&1=thisweek"
+        ENV['MORPH_PERIOD'] = 'thisweek'
+      end
+    else
+      period = "&1=thisweek"
+      ENV['MORPH_PERIOD'] = 'thisweek'
+    end
+end
+puts "Getting data in `" + ENV['MORPH_PERIOD'] + "`, changable via MORPH_PERIOD environment"
 
 def scrape_page(page, comment_url)
   page.at("table.rgMasterTable").search("tr.rgRow,tr.rgAltRow").each do |tr|
@@ -11,13 +32,14 @@ def scrape_page(page, comment_url)
       "info_url" => (page.uri + tr.search('td').at('a')["href"]).to_s,
       "council_reference" => tds[1],
       "date_received" => Date.new(year, month, day).to_s,
-      "description" => tds[3].gsub("&amp;", "&").split("<br>")[1].squeeze(" ").strip,
+      "description" => tds[3].gsub("&amp;", "&").split("<br>")[1].to_s.squeeze(" ").strip,
       "address" => tds[3].gsub("&amp;", "&").split("<br>")[0].gsub("\r", " ").gsub("<strong>","").gsub("</strong>","").squeeze(" ").strip,
       "date_scraped" => Date.today.to_s,
       "comment_url" => comment_url
     }
-    #p record
     if (ScraperWiki.select("* from data where `council_reference`='#{record['council_reference']}'").empty? rescue true)
+      puts "Saving record " + record['council_reference'] + " - " + record['address']
+#      puts record
       ScraperWiki.save_sqlite(['council_reference'], record)
     else
       puts "Skipping already saved record " + record['council_reference']
@@ -43,7 +65,7 @@ def click(page, doc)
   end
 end
 
-url = "http://pdonline.logan.qld.gov.au/MasterViewUI/Modules/ApplicationMaster/default.aspx?page=found&1=thismonth&4a=&6=F"
+url = "http://pdonline.logan.qld.gov.au/MasterViewUI/Modules/ApplicationMaster/default.aspx?page=found" + period + "&4a=&6=F"
 comment_url = "mailto:council@logan.qld.gov.au"
 
 agent = Mechanize.new
