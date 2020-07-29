@@ -23,7 +23,8 @@ def get_page(agent, from:, to:, page_offset:, page_limit:)
   result["data"].each do |a|
     council_reference = a["appNo"]
     record = {
-      "council_reference" => council_reference,
+      # Converting - to / to match what the council is showing
+      "council_reference" => council_reference.gsub("-", "/"),
       "address" => a["propertyFmtAddress"] + ", QLD",
       "description" => a["description"],
       "info_url" => "#{root_url}#/applications/#{council_reference}",
