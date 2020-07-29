@@ -1,1 +1,1 @@
-This scraper has been merged into https://github.com/planningalerts-scrapers/multiple_masterview (logan)
+Logan City council now has a custom site that uses an API. So, we're using that.
