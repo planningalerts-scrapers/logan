@@ -13,7 +13,7 @@ def get_page(agent, from:, to:, page_offset:, page_limit:)
     "pageOffset" => page_offset,
     "pageLimit" => page_limit,
     "sortColumn" => "appNo",
-    "sortDesc" => 0
+    "sortDesc" => 0,
   }
 
   page = agent.get(api_url, params, root_url)
@@ -34,9 +34,9 @@ def get_page(agent, from:, to:, page_offset:, page_limit:)
       # not the actual date range.
       # The addresses are already geocoded. We really should make use of that!
       "lat" => a["lat"],
-      "lng" => a["lon"]
+      "lng" => a["lon"],
     }
-    puts "Storing #{record["council_reference"]} - #{record["address"]}"
+    puts "Storing #{record['council_reference']} - #{record['address']}"
     ScraperWiki.save_sqlite(["council_reference"], record)
   end
   result["data"].count
