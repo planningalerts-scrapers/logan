@@ -5,7 +5,7 @@ require "scraperwiki"
 # Returns number of records found
 def get_page(agent, from:, to:, page_offset:, page_limit:)
   root_url = "https://devet.loganhub.com.au/"
-  api_url = "https://devet-proxy.loganhub.com.au/devetapi/applications"
+  api_url = "https://council-api-proxy.lcc.wspdigital.com/pdonline/applications"
 
   params = {
     "lodgeDateFrom" => from,
@@ -46,13 +46,23 @@ end
 to = Date.today
 from = to - 30
 page_offset = 1
-page_limit = 10
-count = page_limit
+# Increased from 10 to 100 since it takes only 20% more time to get 5x the records, so presumably it's nicer to the server
+page_limit = 100
 
 agent = Mechanize.new
 
 puts "Getting application submitted between #{from} and #{to}..."
-while count == page_limit
+loop do
+  puts "Getting page: #{page_offset}..."
+  start_time = Time.now.to_f
   count = get_page(agent, from: from, to: to, page_offset: page_offset, page_limit: page_limit)
+  if count != page_limit
+    puts "Finished, Last page only had #{count} items"
+    break
+  end
+
   page_offset += 1
+  duration = (Time.now.to_f - start_time).round(3) + 0.5
+  puts "Pausing #{duration}s"
+  sleep(duration)
 end
